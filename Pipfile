@@ -7,6 +7,12 @@ verify_ssl = true
 
 [packages]
 scrapy = "*"
+peewee = "*"
+python-decouple = "*"
+psycopg2 = "*"
+beaultifulsoup4 = "*"
+beautifulsoup4 = "*"
+beautifulsoup = "*"
 
 [requires]
 python_version = "3.6"

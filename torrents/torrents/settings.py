@@ -9,10 +9,27 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
+from decouple import config
+
 BOT_NAME = 'torrents'
 
 SPIDER_MODULES = ['torrents.spiders']
 NEWSPIDER_MODULE = 'torrents.spiders'
+
+DB_HOST = config('DB_HOST')
+DB_PORT = config('DB_PORT', default=5432, cast=int)
+DB_NAME = config('DB_NAME')
+DB_USER = config('DB_USER')
+DB_PASSWORD = config('DB_PASSWORD')
+LOG_LEVEL = config('LOG_LEVEL', default='INFO')
+
+DATABASE_DATA = {
+    'database': DB_NAME,
+    'user': DB_USER,
+    'password': DB_PASSWORD,
+    'host': DB_HOST, 
+    'port': DB_PORT
+}
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -64,9 +81,9 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'torrents.pipelines.TorrentsPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'torrents.pipelines.TorrentsPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
