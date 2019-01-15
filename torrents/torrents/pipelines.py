@@ -10,6 +10,25 @@ import logging
 
 from .models import Torrent, MagnetLink, db
 
+import os
+
+from selenium import webdriver
+
+
+OPTIONS = webdriver.ChromeOptions()
+prefs = {
+    'profile.managed_default_content_settings.images': 2,
+    'disk-cache-size': 4096
+}
+OPTIONS.add_experimental_option("prefs", prefs)
+OPTIONS.add_argument('headless')
+OPTIONS.add_argument('window-size=1200x600')
+
+driver_path = os.path.join(os.path.dirname(__file__), 'chromedriver')
+driver = webdriver.Chrome(
+    executable_path=driver_path, chrome_options=OPTIONS)
+driver.implicitly_wait(3)
+
 
 class TorrentsPipeline(object):
     def open_spider(self, spider):
@@ -18,9 +37,10 @@ class TorrentsPipeline(object):
             db.create_tables([Torrent, MagnetLink])
         except peewee.OperationalError:
             pass
-    
+
     def close_spider(self, spider):
         db.close()
+        driver.quit()
 
     def process_item(self, item, spider):
         magnet_urls = item.pop('magnet_urls')
@@ -43,7 +63,7 @@ class TorrentsPipeline(object):
                 msg = f"ERROR - {error}"
                 logging.info(msg)
                 return msg
-        
+
         torrent = magnet.torrent
         updated = False
         for link in magnet_urls:
