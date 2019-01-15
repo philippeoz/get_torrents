@@ -1,0 +1,6 @@
+[settings]
+DB_HOST=database_host
+DB_PORT=5432
+DB_NAME=torrent
+DB_USER=postgres
+DB_PASSWORD=mypassword
