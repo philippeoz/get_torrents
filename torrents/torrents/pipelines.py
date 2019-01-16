@@ -27,16 +27,19 @@ OPTIONS.add_argument('window-size=1200x600')
 driver_path = os.path.join(os.path.dirname(__file__), 'chromedriver')
 driver = webdriver.Chrome(
     executable_path=driver_path, chrome_options=OPTIONS)
-driver.implicitly_wait(3)
+# driver.implicitly_wait(3)
 
 
 class TorrentsPipeline(object):
     def open_spider(self, spider):
+        logging.info('CONNECTING TO DATABASE')
         db.connect()
         try:
+            logging.info('TRYING TO CREATE TABLES')
             db.create_tables([Torrent, MagnetLink])
+            logging.info('TABLES CREATED')
         except peewee.OperationalError:
-            pass
+            logging.info('ERROR ON TABLES CREATE')
 
     def close_spider(self, spider):
         db.close()

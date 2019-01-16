@@ -5,6 +5,10 @@ import logging
 from bs4 import BeautifulSoup
 from torrents.pipelines import driver as DRIVER
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 class TorrentSpider(scrapy.Spider):
     name = "torrentdosfilmeshd"
@@ -26,9 +30,9 @@ class TorrentSpider(scrapy.Spider):
             result = response.css(query).extract_first()
             return result.strip() if result else ''
 
-        content = self.parse_content(response.css('.content').pop())
-        categories = response.css('.tags a::text').extract()
         title = extract_with_css('.title h1 a::text')
+        content = self.parse_content(response.css('.content').pop(), title)
+        categories = response.css('.tags a::text').extract()
 
         if categories:
             categories = ', '.join(categories).upper()
@@ -44,7 +48,7 @@ class TorrentSpider(scrapy.Spider):
             **content
         }
 
-    def parse_content(self, content):
+    def parse_content(self, content, title):
         data = {}
         cover_image = content.css('img.alignleft::attr(src)').extract_first()
         if cover_image:
@@ -57,20 +61,33 @@ class TorrentSpider(scrapy.Spider):
             elif 'SINOPSE' in p.text:
                 data['synopsis'] = p.text
 
-        magnet_urls = content.css('a[href*=masterads]::attr(href)').extract()
-        if magnet_urls:
-            data['magnet_urls'] = self.get_magnet_link(magnet_urls)
+        magnet_pre_urls = content.css(
+            'a[href*=masterads]::attr(href)').extract()
+        if magnet_pre_urls:
+            magnet_urls = self.get_magnet_link(magnet_pre_urls, title)
+            if magnet_urls:
+                data['magnet_urls'] = magnet_urls
         return data
 
-    def get_magnet_link(self, urls):
+    def get_magnet_link(self, urls, title):
         if not isinstance(urls, list):
             urls = [urls]
         magnet_urls = []
-
         for url in urls:
-            DRIVER.get(url)
-            button = DRIVER.find_element_by_css_selector('a[href*=magnet]')
-            if button:
-                magnet_urls.append(button.get_attribute('href'))
-
+            done = False
+            while not done:
+                try:
+                    DRIVER.get(url)
+                    wait = WebDriverWait(DRIVER, 10)
+                    button = wait.until(
+                        EC.presence_of_element_located(
+                            (By.CSS_SELECTOR, 'a[href*=magnet]')
+                        )
+                    )
+                    if button and button.get_attribute('href'):
+                        magnet_urls.append(button.get_attribute('href'))
+                        done = True
+                except Exception as err:
+                    logging.info(
+                        f'MAGNETLINK NOT FOUND ON {title} - TRYING AGAIN')
         return magnet_urls
