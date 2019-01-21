@@ -16,7 +16,7 @@ class TorrentSpider(scrapy.Spider):
 
         for href in response.css('.nextpostslink::attr(href)'):
             yield response.follow(href, self.parse)
-    
+
     def parse_torrent_page(self, response):
         def extract_with_css(query):
             result = response.css(query).extract_first()

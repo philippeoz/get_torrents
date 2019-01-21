@@ -21,13 +21,10 @@ prefs = {
     'disk-cache-size': 4096
 }
 OPTIONS.add_experimental_option("prefs", prefs)
-OPTIONS.add_argument('headless')
-OPTIONS.add_argument('window-size=1200x600')
+# OPTIONS.add_argument('headless')
+# OPTIONS.add_argument('window-size=1200x600')
 
-driver_path = os.path.join(os.path.dirname(__file__), 'chromedriver')
-driver = webdriver.Chrome(
-    executable_path=driver_path, chrome_options=OPTIONS)
-# driver.implicitly_wait(3)
+DRIVER_PATH = os.path.join(os.path.dirname(__file__), 'chromedriver')
 
 
 class TorrentsPipeline(object):
@@ -41,9 +38,17 @@ class TorrentsPipeline(object):
         except peewee.OperationalError:
             logging.info('ERROR ON TABLES CREATE')
 
+        if hasattr(spider, 'driver'):
+            logging.info('SPIDER HAS WEBDRIVER - STARTING...')
+            spider.driver = webdriver.Chrome(
+                executable_path=DRIVER_PATH, chrome_options=OPTIONS)
+            spider.driver.implicitly_wait(10)
+            logging.info('WEBDRIVER - STARTED')
+
     def close_spider(self, spider):
         db.close()
-        driver.quit()
+        if hasattr(spider, 'driver'):
+            spider.driver.quit()
 
     def process_item(self, item, spider):
         magnet_urls = item.pop('magnet_urls')
