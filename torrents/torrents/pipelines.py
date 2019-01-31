@@ -21,8 +21,8 @@ prefs = {
     'disk-cache-size': 4096
 }
 OPTIONS.add_experimental_option("prefs", prefs)
-# OPTIONS.add_argument('headless')
-# OPTIONS.add_argument('window-size=1200x600')
+OPTIONS.add_argument('headless')
+OPTIONS.add_argument('window-size=1200x600')
 
 DRIVER_PATH = os.path.join(os.path.dirname(__file__), 'chromedriver')
 

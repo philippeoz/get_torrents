@@ -32,7 +32,7 @@ class TorrentSpider(scrapy.Spider):
             return result.strip() if result else ''
 
         title = extract_with_css('.title h1 a::text')
-        content = self.parse_content(response.css('.content').pop())
+        content = self.parse_content(response.css('.content').pop(), title)
         categories = response.css('.tags a::text').extract()
 
         if categories:
@@ -49,7 +49,7 @@ class TorrentSpider(scrapy.Spider):
             **content
         }
 
-    def parse_content(self, content):
+    def parse_content(self, content, title):
         data = {}
         cover_image = content.css('img.alignleft::attr(src)').extract_first()
         if cover_image:
@@ -65,6 +65,7 @@ class TorrentSpider(scrapy.Spider):
         magnet_pre_urls = content.css(
             'a[href*=masterads]::attr(href)').extract()
         if magnet_pre_urls:
+            logging.info(f'GET TORRENTS OF - {title}')
             magnet_urls = self.get_magnet_link(magnet_pre_urls)
             if magnet_urls:
                 data['magnet_urls'] = magnet_urls
@@ -91,16 +92,20 @@ class TorrentSpider(scrapy.Spider):
         for url in urls:
             done = False
             while not done:
-                self.driver.get(url)
-                magnet = try_on_element(
-                    self.driver, 'div[id=linkarq]', 'title')
-                if magnet is None:
+                try:
+                    self.driver.get(url)
                     magnet = try_on_element(
-                        self.driver, 'a[id=linkarq]', 'href')
-                if magnet is None:
-                    magnet = try_on_element(
-                        self.driver, 'a[href*=magnet]', 'href')
-                if magnet is not None:
-                    magnet_urls.append(magnet)
-                    done = True
+                        self.driver, 'div[id=linkarq]', 'title')
+                    if magnet is None:
+                        magnet = try_on_element(
+                            self.driver, 'a[id=linkarq]', 'href')
+                    if magnet is None:
+                        magnet = try_on_element(
+                            self.driver, 'a[href*=magnet]', 'href')
+                    if magnet is not None:
+                        magnet_urls.append(magnet)
+                        logging.info(f'{len(magnet_urls)} - {magnet[:35]}...')
+                        done = True
+                except Exception as err:
+                    logging.info(err)
         return magnet_urls
