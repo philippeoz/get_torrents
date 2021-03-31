@@ -15,7 +15,7 @@ greenlet==0.4.15
 hyperlink==18.0.0
 idna==2.8
 incremental==17.5.0
-lxml==4.3.0
+lxml==4.6.3
 parsel==1.5.1
 peewee==3.8.1
 pep8==1.7.1
